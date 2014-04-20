@@ -7,3 +7,8 @@ pom.xml
 .lein-deps-sum
 .lein-repl-history
 .lein-plugins/
+.repl/
+.nrepl-port
+\#*\#
+graft.js
+start-browser-repl.clj
