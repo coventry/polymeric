@@ -9,6 +9,7 @@
                  [com.cemerick/clojurescript.test "0.3.0"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [com.cemerick/double-check "0.5.7-SNAPSHOT"]
+                 [org.clojure/test.check "0.5.7"] 
                  [om "0.5.0"]]
 
   :plugins [[lein-cljsbuild "1.0.2"]]
