@@ -8,18 +8,21 @@
     id
     (aset obj id-prop (gensym id-prop))))
 
+(defn add-ref! [duplicates seen ref]
+  (let [id (get-id! ref)]
+    (if (not (@seen id))
+      (do (swap! seen conj id)
+          ;; Continue the traversal
+          ref)
+      (do (swap! duplicates assoc id ref)
+          ;; Don't follow this node further
+          nil))))
+
 (defn get-duplicates [obj]
   (let [duplicates (atom nil)
         seen (atom #{})
-        add-ref!   #(let [id (get-id! %)]
-                      (if (not (@seen id))
-                        (do (swap! seen conj id)
-                            ;; Continue the traversal
-                            %)
-                        (do (swap! duplicates assoc id %)
-                            ;; Don't follow this node further
-                            nil)))]
-    (w/prewalk #(if (coll? %) (add-ref! %)) obj)
+        add-ref! (partial add-ref! duplicates seen)]
+    (w/prewalk #(when (coll? %) (add-ref! %)) obj)
     @duplicates))
 
 (defn prune-duplicates [obj duplicates]
