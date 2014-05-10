@@ -34,7 +34,8 @@
       (update-in duplicates [:duplicates] assoc id ref))))
 
 (defn add-ref! [duplicates ref]
-  (let [current-count (:seen-count duplicates)
+  "Modify the DUPLICATES atom"
+  (let [current-count (:seen-count @duplicates)
         new-duplicates (swap! duplicates add-ref!* ref)]
     (if (< current-count (:seen-count new-duplicates))
       ;; Was a previously seen object, keep descending tree
@@ -46,12 +47,23 @@
     (w/prewalk #(when (coll? %) (add-ref! %)) obj)
     @duplicates))
 
-;; apply to the (key/val swapped) duplicates map itself to deflate it?
-(defn prune-duplicates [obj duplicates]
+(defn maybe-prune-node [duplicates obj]
+  (let [id (get-id! obj)]
+    (if (contains? duplicates id)
+      id
+      obj)))
+
+(defn prune-object [obj duplicates]
   "Returns OBJ with all instances of substructures whose ids (via
   GET-ID!) are keys in DUPLICATES replaced by corresponding values."
-  (let [prune #(let [id (get-id! %)] (if (duplicates id) id %))]
-    (w/prewalk prune obj)))
+  (w/prewalk (partial maybe-prune-node duplicates) obj))
+
+(defn prune-duplicates [duplicates]
+  "Return a TOPSORTed list of [id pruned-object] pairs from
+  DUPLICATES, based on the values in its :seen key"
+  (for [[id obj] (sort-by (comp (:seen duplicates) first)
+                          (:duplicates duplicates))]
+    [id (prune-object obj (:duplicates duplicates))]))
 
 (defn find-grafts [obj duplicates]
   "Walk OBJ, looking for values which are keys in DUPLICATES, and replacing them with ")

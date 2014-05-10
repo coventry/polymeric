@@ -19,7 +19,7 @@
         duplicates-result (g/get-duplicates composite)
         duplicates (:duplicates duplicates-result)
         dup? #(seq (filter (partial identical? %1) (vals duplicates)))
-        pruned (g/prune-duplicates composite duplicates)]
+        pruned (g/prune-object composite duplicates)]
     (is (dup? foo)
         "get-duplicates should see substructure with multiple references")
     (is (not (dup? bar))
