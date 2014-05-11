@@ -62,39 +62,28 @@
 (defn prune-object [obj duplicates]
   "Returns OBJ with all instances of substructures whose ids (via
   GET-ID!) are keys in DUPLICATES replaced by corresponding values."
-  (w/prewalk (partial maybe-prune-node duplicates) obj))
+  (w/prewalk (partial maybe-prune-node (dissoc duplicates (get-id! obj)))
+             obj))
 
 (defn prune-duplicates [duplicates]
   "Return a TOPSORTed list of [id pruned-object] pairs from
   DUPLICATES, based on the values in its :seen key"
-  (for [[id obj] (sort-by (comp (:seen duplicates) first)
-                          (:duplicates duplicates))]
-    [id (prune-object obj (:duplicates duplicates))]))
+  (let [{:keys [seen duplicates]} duplicates]
+    (for [[id obj] (sort-by (comp seen first) duplicates)]
+      [id (prune-object obj duplicates)])))
 
-(defn find-grafts [obj duplicates]
-  "Walk OBJ, looking for values which are keys in DUPLICATES, and replacing them with ")
-
-(defn reflate* [duplicates reflated id obj seen]
-  )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Reflation of objects
 
-(defn reflate [duplicates reflated id obj]
-  (if (contains? reflated id)
-    reflated
-    (trampoline reflate* duplicates reflated id obj #{})))
+(defn reflate [obj duplicates]
+  "Walk the reference tree of OBJ, replacing any keys in DUPLICATES
+  with corresponding values."
+  (w/prewalk-replace duplicates obj))
 
 (defn reflate-duplicates [duplicates]
-  "Recursively replace all instances of ids referred to by vals of
-  DUPLICATES with their given values.  SEEN-IDS is used to keep track
-  of cyclic dependencies between DUPLICATES... XXX"
-  (reduce-kv (partial reflate duplicates) {} duplicates)
-  ;; Imperative version, gets me nothing.
-  #_(let [reflated (atom nil)]
-    (doseq [[id obj] duplicates
-            :when (not (contains? @reflated id))
-            :let [reflated-obj (reflate duplicates reflated obj)]]
-      (swap! reflated assoc id reflated-obj))))
-
-(defn graft-duplicates [obj duplicates]
-  (w/prewalk-replace duplicates obj))
+  "Take a TOPSORTed list of [id obj] pairs, such as produced by
+  PRUNE-DUPLICATES, and replace any abbreviations found in them."
+  (reduce (fn [m [id obj]]
+            (assoc m id (reflate obj m)))
+          {}
+          (reverse duplicates)))
