@@ -1,6 +1,9 @@
 (ns graft
   (:require [clojure.walk :as w]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Tracking object identity
+
 (def id-prop "__cljs_graft_id__")
 
 (defn get-id! [obj]
@@ -10,6 +13,9 @@
   (if-let [id (aget obj id-prop)]
     id
     (aset obj id-prop (gensym id-prop))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Analyzing identity relationships in object
 
 ;; XXX Since I'm using an atom anyway, probably better to make this a
 ;; set of JS objects which I bash in-place.
@@ -70,6 +76,8 @@
 
 (defn reflate* [duplicates reflated id obj seen]
   )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Reflation of objects
 
 (defn reflate [duplicates reflated id obj]
   (if (contains? reflated id)
