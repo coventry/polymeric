@@ -12,8 +12,8 @@
     (let [new-size (* (quot size 4) 3)
           smaller-structure (gen/resize new-size (gen/sized structured))]
       (gen/bind (gen/frequency
-                 [[1 gen/simple-type]
-                  [10 (gen/vector smaller-structure)]])
+                 [[1 (gen/such-that not-empty (gen/vector gen/simple-type))]
+                  [10 (gen/such-that not-empty (gen/vector smaller-structure))]])
                 (fn [%]
                   (if (and (coll? %) (> (count %) 0))
                     (gen/sized (gen/sized-container (gen/elements %)))
